@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    container_name: 'app'
+    command: python manage.py runserver 0:80
+    ports:
+      - 80:80
+    volumes:
+      - .:/app
+    depends_on:
+      - make-migrate
+      - migrate
+  migrate:
+    build: .
+    container_name: 'migrate_app'
+    command: python manage.py migrate --noinput
+    volumes:
+      - .:/app
+    depends_on:
+      - make-migrate
+  make-migrate:
+    build: .
+    container_name: 'makemigrations_app'
+    command: python manage.py makemigrations --noinput
+    volumes:
+      - .:/app
+
+
