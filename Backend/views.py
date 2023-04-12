@@ -6,6 +6,7 @@ from rest_framework.serializers import BaseSerializer
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication
 
 from .models import *
 from .serializers import *
@@ -53,15 +54,18 @@ class UserSignIn(CreateAPIView):
 
 class LoginView(views.APIView):
     permission_classes = (permissions.AllowAny,)
-    serializer_class = LoginSerializer
+    serializer_class = UserLogInSerializer
 
     def post(self, request):
-        serializer = LoginSerializer(data=self.request.data,
-                                     context={'request': self.request})
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        login(request, user)
-        data = {}
+        response = {
+            'success': 'True',
+            'status_code': status.HTTP_200_OK,
+            'message': 'Ваш логин успешно зарегистрирован',
+            'token': serializer.data['token']
+        }
+        status_code = status.HTTP_200_OK
         user = self.request.user
         try:
             g1 = Group.objects.get(name='Client')
@@ -76,9 +80,9 @@ class LoginView(views.APIView):
         if self.request.data['client']:
             is_client = Client.objects.filter(id=user).exists()
             if is_client:
-                data['client'] = True
+                response['client'] = True
             else:
-                data['client'] = False
+                response['client'] = False
             try:
                 g1.user_set.add(user)
                 g2.user_set.remove(user)
@@ -87,16 +91,16 @@ class LoginView(views.APIView):
         else:
             is_executor = Executor.objects.filter(id=user).exists()
             if is_executor:
-                data['executor'] = True
+                response['executor'] = True
             else:
-                data['executor'] = False
+                response['executor'] = False
             try:
                 g2.user_set.add(user)
                 g1.user_set.remove(user)
             except BaseException:
                 return Response(data={'err': '2'}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(data, status=status.HTTP_202_ACCEPTED)
+        return Response(response, status=status_code)
 
 
 class LogoutView(views.APIView):

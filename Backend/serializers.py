@@ -1,6 +1,12 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
 from rest_framework.serializers import *
 from .models import *
+from rest_framework_jwt.settings import api_settings
+
+
+JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
+JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
 
 
 class UserSerializer(ModelSerializer):
@@ -37,9 +43,34 @@ class UserSignInSerializer(ModelSerializer):
 
 
 class UserLogInSerializer(ModelSerializer):
+    username = CharField(max_length=255)
+    password = CharField(max_length=255, write_only=True)
+    token = CharField(max_length=255, read_only=True)
+
+    def validate(self, data):
+        username = data.get("username", None)
+        password = data.get("password", None)
+        user = authenticate(username=username, password=password)
+        if user is None:
+            raise ValidationError(
+                'Если пользовательне нашел username и password'
+            )
+        try:
+            payload = JWT_PAYLOAD_HANDLER(user)
+            jwt_token = JWT_ENCODE_HANDLER(payload)
+            update_last_login(None, user)
+        except User.DoesNotExist:
+            raise ValidationError(
+                'Пользователь отправляет почту и пароль . Он не должен быть пустым'
+            )
+        return {
+            'username': user.username,
+            'token': jwt_token
+        }
+
     class Meta:
         model = User
-        fields = ('username', 'password')
+        fields = ('username', 'password', 'token')
 
 
 class ExecutorSignInSerializer(ModelSerializer):

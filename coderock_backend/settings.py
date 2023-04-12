@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -56,12 +57,13 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
+    'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    ],
+        'rest_framework.permissions.IsAdminUser',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -71,7 +73,7 @@ ROOT_URLCONF = 'coderock_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend/public']
+        'DIRS': [BASE_DIR / 'templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -149,3 +151,44 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+AUTH_USER_MODEL = 'Backend.User'
+JWT_AUTH = {
+
+    'JWT_ENCODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_encode_handler',
+
+    'JWT_DECODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_decode_handler',
+
+# JWT_PAYLOAD_HANDLER: данные, которые мы хотим передать как полезную нагрузку.
+    'JWT_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_payload_handler',
+
+    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
+    'rest_framework_jwt.utils_get_user_id_from_payload_handler',
+
+# JWT_SECRET_KEY: секретный ключ для кодирования / декодирования токена
+    'JWT_SECRET_KEY': 'SECRET_KEY',
+    'JWT_GET_USER_KEY': None,
+    'JWT_PUBLIC_KEY': None,
+    'JWT_PRIVATE_KEY': None,
+
+# JWT_ALGORITHM: какой алгоритм использовать
+    'JWT_ALGORITM': 'HS256',
+
+# JWT_VERIFY: если мы хотим проверить токен, всегда должно быть True
+    'JWT_VERIFY': True,
+
+# JWT_VERIFY_EXPIRATION: если срок действия токена истек.
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_AUDIENCE': True,
+    'JWT_ISSUER': None,
+    'JWT_ALLOW_REFRESH': False,
+# JWT_EXPIRATION_DELTA: время истечения срока действия токена, можно в минутах, часах, днях
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=30),
+# JWT_AUTH_HEADER_PREFIX: префикс, который будет использоваться с токеном,
+    # как правило, мы предпочитаем Bearer
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+    'JWT_AUTH_COOKIE': None
+}
