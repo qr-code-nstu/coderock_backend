@@ -9,4 +9,5 @@ urlpatterns = [
     path('client/signin/', ClientSignIn.as_view()),
     path('executor/signin/', ClientSignIn.as_view()),
     path('categories/', CategoriesView.as_view()),
+    path('isi/', IsI.as_view()),
 ]

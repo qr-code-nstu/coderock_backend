@@ -2,8 +2,10 @@ from django.contrib.auth import login, logout
 from django.shortcuts import render
 from django.views import View
 from django.contrib.auth.models import Group
+from rest_framework.serializers import BaseSerializer
 from rest_framework import permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import *
 from .serializers import *
@@ -11,11 +13,31 @@ from rest_framework.generics import *
 
 
 class MainView(ListAPIView):
+    permission_classes = (permissions.IsAuthenticated, )
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
 
 
+class IsI(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request):
+        user = self.request.user
+        g1 = Group.objects.get(name='Executor')
+        g2 = Group.objects.get(name='Client')
+        g11 = user.groups.filter(name=g1.name).exists()
+        g22 = user.groups.filter(name=g2.name).exists()
+        if g11:
+            return Response(data={'you': g1.name}, status=status.HTTP_200_OK)
+
+        elif g22:
+            return Response(data={'you': g2.name}, status=status.HTTP_200_OK)
+        else:
+            return Response(data={'you': 'No'}, status=status.HTTP_200_OK)
+
+
 class CategoriesView(ListAPIView):
+    permission_classes = (permissions.IsAuthenticated, )
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
 
