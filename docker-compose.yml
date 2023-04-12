@@ -5,17 +5,12 @@ services:
     container_name: 'app'
     command: python manage.py runserver 0:80
     ports:
-      - 8000:8000
+      - 80:80
     volumes:
       - .:/app
-      - django_static_volume:/usr/src/app/static
-      - django_media_volume:/usr/src/app/media
-    networks:
-      - myNetwork
     depends_on:
       - make-migrate
       - migrate
-
   migrate:
     build: .
     container_name: 'migrate_app'
@@ -24,36 +19,9 @@ services:
       - .:/app
     depends_on:
       - make-migrate
-
   make-migrate:
     build: .
     container_name: 'makemigrations_app'
     command: python manage.py makemigrations --noinput
     volumes:
       - .:/app
-
-  node:
-
-    build: ./reactapp
-
-    container_name: reactapp
-
-    restart: always
-
-    ports:
-      - 3000:3000
-
-    command: npm start
-
-    depends_on:
-      - django
-
-    networks:
-      - myNetwork
-    volumes:
-      - ./reactapp/public/:/usr/src/app/public/
-      - ./reactapp/src/:/usr/src/app/src/
-volumes:
-  django_static_volume:
-  django_media_volume:
-  rabbitmq_data_volume:

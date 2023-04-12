@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from rest_framework.serializers import *
 from .models import *
 
@@ -14,6 +15,12 @@ class UserSignInSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email', 'password', 'password2')
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise ValidationError({"password": "Password fields didn't match."})
+
+        return attrs
 
     def save(self, *args, **kwargs):
         user = User(
@@ -69,3 +76,38 @@ class CategoriesSerializer(ModelSerializer):
     class Meta:
         model = Categories
         field = '__all__'
+
+
+class LoginSerializer(ModelSerializer):
+    username = CharField(
+        label="Username",
+        write_only=True
+    )
+    password = CharField(
+        label="Password",
+        # This will be used when the DRF browsable API is enabled
+        style={'input_type': 'password'},
+        trim_whitespace=False,
+        write_only=True
+    )
+
+    def validate(self, attrs):
+        # Take username and password from request
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        if username and password:
+            user = authenticate(request=self.context.get('request'),
+                                username=username, password=password)
+            if not user:
+                msg = 'Access denied: wrong username or password.'
+                raise ValidationError(msg, code='authorization')
+        else:
+            msg = 'Both "username" and "password" are required.'
+            raise ValidationError(msg, code='authorization')
+        attrs['user'] = user
+        return attrs
+
+    class Meta:
+        model = Client
+        fields = ('username', 'password')
