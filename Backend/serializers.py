@@ -42,37 +42,6 @@ class UserSignInSerializer(ModelSerializer):
         return user
 
 
-class UserLogInSerializer(ModelSerializer):
-    username = CharField(max_length=255)
-    password = CharField(max_length=255, write_only=True)
-    token = CharField(max_length=255, read_only=True)
-
-    def validate(self, data):
-        username = data.get("username", None)
-        password = data.get("password", None)
-        user = authenticate(username=username, password=password)
-        if user is None:
-            raise ValidationError(
-                'Если пользовательне нашел username и password'
-            )
-        try:
-            payload = JWT_PAYLOAD_HANDLER(user)
-            jwt_token = JWT_ENCODE_HANDLER(payload)
-            update_last_login(None, user)
-        except User.DoesNotExist:
-            raise ValidationError(
-                'Пользователь отправляет почту и пароль . Он не должен быть пустым'
-            )
-        return {
-            'username': user.username,
-            'token': jwt_token
-        }
-
-    class Meta:
-        model = User
-        fields = ('username', 'password', 'token')
-
-
 class ExecutorSignInSerializer(ModelSerializer):
     class Meta:
         model = Executor
@@ -81,8 +50,6 @@ class ExecutorSignInSerializer(ModelSerializer):
 
 class ClientSignInSerializer(ModelSerializer):
 
-
-    # Apply custom validation either here, or in the view.
     class Meta:
         model = Client
         fields = '__all__'
