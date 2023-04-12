@@ -49,8 +49,11 @@ class ExecutorSignInSerializer(ModelSerializer):
 
 
 class ClientSignInSerializer(ModelSerializer):
+
+
+    # Apply custom validation either here, or in the view.
     class Meta:
-        model = Executor
+        model = Client
         fields = '__all__'
 
 
